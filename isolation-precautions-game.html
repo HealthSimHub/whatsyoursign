@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What's Your Sign? — Isolation Precautions</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181b24;
+    --border: rgba(255,255,255,.07);
+    --contact-color: #22c55e;
+    --contact-dark: #166534;
+    --contact-bg: rgba(34,197,94,.1);
+    --droplet-color: #3b82f6;
+    --droplet-dark: #1e3a8a;
+    --droplet-bg: rgba(59,130,246,.1);
+    --airborne-color: #f59e0b;
+    --airborne-dark: #78350f;
+    --airborne-bg: rgba(245,158,11,.1);
+    --text: #f0f4ff;
+    --muted: #8892aa;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BG TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(59,130,246,.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(245,158,11,.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* ── HEADER ── */
+  .site-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-badge {
+    background: linear-gradient(135deg, #3b82f6, #22c55e);
+    border-radius: 10px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-family: 'Bebas Neue', cursive; font-size: 18px; letter-spacing: 1px; color: #fff; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: -2px; }
+  .score-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex; gap: 14px; align-items: center;
+  }
+  .score-num { color: #fff; font-weight: 700; font-size: 16px; }
+  .score-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── INTRO ── */
+  .intro-hero {
+    text-align: center; padding: 48px 0 32px;
+  }
+  .intro-tag {
+    display: inline-block;
+    background: rgba(59,130,246,.15);
+    border: 1px solid rgba(59,130,246,.3);
+    border-radius: 999px;
+    padding: 4px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #93c5fd;
+    margin-bottom: 20px;
+  }
+  .intro-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(48px, 10vw, 80px);
+    line-height: .95;
+    letter-spacing: 2px;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .intro-title span.c { color: var(--contact-color); }
+  .intro-title span.d { color: var(--droplet-color); }
+  .intro-title span.a { color: var(--airborne-color); }
+  .intro-sub {
+    font-size: 16px; color: var(--muted); max-width: 480px; margin: 0 auto 36px;
+    line-height: 1.6;
+  }
+
+  /* Reference cards on intro */
+  .ref-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin-bottom: 40px;
+  }
+  .ref-card {
+    border-radius: 16px;
+    padding: 20px 16px;
+    border: 1px solid;
+    text-align: left;
+  }
+  .ref-card.contact { background: var(--contact-bg); border-color: rgba(34,197,94,.25); }
+  .ref-card.droplet { background: var(--droplet-bg); border-color: rgba(59,130,246,.25); }
+  .ref-card.airborne { background: var(--airborne-bg); border-color: rgba(245,158,11,.25); }
+  .ref-icon { font-size: 28px; margin-bottom: 8px; }
+  .ref-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px; letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .ref-card.contact .ref-name { color: var(--contact-color); }
+  .ref-card.droplet .ref-name { color: var(--droplet-color); }
+  .ref-card.airborne .ref-name { color: var(--airborne-color); }
+  .ref-ppe { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+  .ref-examples { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .ref-examples strong { color: var(--text); }
+
+  .start-btn {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 18px 48px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 24px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all .2s;
+    box-shadow: 0 4px 24px rgba(59,130,246,.3);
+  }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(59,130,246,.4); }
+
+  /* ── GAME ── */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border-radius: 999px;
+    height: 6px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #3b82f6, #22c55e);
+    transition: width .4s ease;
+  }
+
+  .q-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .q-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .streak-badge {
+    background: rgba(245,158,11,.15);
+    border: 1px solid rgba(245,158,11,.3);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px; font-weight: 700;
+    color: var(--airborne-color);
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .streak-badge.show { opacity: 1; }
+
+  /* Patient Room Card */
+  .patient-room {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 28px 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .patient-room::before {
+    content: '🏥';
+    position: absolute; top: 18px; right: 22px;
+    font-size: 36px; opacity: .12;
+  }
+  .room-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  .patient-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .patient-scenario {
+    font-size: 18px; font-weight: 600;
+    line-height: 1.5; color: var(--text);
+    margin-bottom: 16px;
+  }
+  .patient-details {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .detail-chip {
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px; color: var(--muted);
+  }
+  .vital-note {
+    font-size: 13px; color: var(--muted);
+    font-style: italic;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    line-height: 1.5;
+  }
+
+  .pick-label {
+    text-align: center;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px;
+  }
+
+  /* The 3 Answer Cards */
+  .card-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .answer-card {
+    border-radius: 18px;
+    padding: 22px 14px 18px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+  .answer-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity .15s;
+    background: rgba(255,255,255,.05);
+  }
+  .answer-card:hover::after { opacity: 1; }
+  .answer-card:hover { transform: translateY(-3px); }
+  .answer-card:active { transform: scale(.97); }
+
+  .answer-card.contact {
+    background: var(--contact-bg);
+    border-color: rgba(34,197,94,.25);
+  }
+  .answer-card.droplet {
+    background: var(--droplet-bg);
+    border-color: rgba(59,130,246,.25);
+  }
+  .answer-card.airborne {
+    background: var(--airborne-bg);
+    border-color: rgba(245,158,11,.25);
+  }
+
+  /* State: selected */
+  .answer-card.selected.contact { border-color: var(--contact-color); box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+  .answer-card.selected.droplet { border-color: var(--droplet-color); box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+  .answer-card.selected.airborne { border-color: var(--airborne-color); box-shadow: 0 0 0 3px rgba(245,158,11,.2); }
+
+  /* State: correct */
+  .answer-card.result-correct {
+    animation: popCorrect .5s ease;
+  }
+  .answer-card.result-correct.contact { background: rgba(34,197,94,.25); border-color: var(--contact-color); }
+  .answer-card.result-correct.droplet { background: rgba(59,130,246,.25); border-color: var(--droplet-color); }
+  .answer-card.result-correct.airborne { background: rgba(245,158,11,.25); border-color: var(--airborne-color); }
+
+  /* State: wrong */
+  .answer-card.result-wrong { animation: shakeWrong .4s ease; opacity: .4; }
+
+  /* State: reveal correct (when they got it wrong) */
+  .answer-card.reveal-correct { opacity: 1 !important; }
+
+  @keyframes popCorrect {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shakeWrong {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .card-icon { font-size: 32px; margin-bottom: 10px; }
+  .card-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 24px; letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .answer-card.contact .card-title { color: var(--contact-color); }
+  .answer-card.droplet .card-title { color: var(--droplet-color); }
+  .answer-card.airborne .card-title { color: var(--airborne-color); }
+  .card-ppe {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .card-check {
+    position: absolute; top: 10px; right: 12px;
+    font-size: 20px; opacity: 0; transition: opacity .2s;
+  }
+  .answer-card.result-correct .card-check { opacity: 1; }
+
+  /* Feedback banner */
+  .feedback-banner {
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    display: none;
+    animation: slideUp .3s ease;
+  }
+  .feedback-banner.show { display: block; }
+  .feedback-banner.correct {
+    background: rgba(34,197,94,.1);
+    border: 1px solid rgba(34,197,94,.3);
+  }
+  .feedback-banner.wrong {
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.3);
+  }
+  .feedback-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .feedback-icon { font-size: 22px; }
+  .feedback-verdict {
+    font-size: 16px; font-weight: 700;
+  }
+  .feedback-banner.correct .feedback-verdict { color: var(--contact-color); }
+  .feedback-banner.wrong .feedback-verdict { color: var(--wrong); }
+  .feedback-explain {
+    font-size: 13px; color: var(--muted); line-height: 1.6;
+  }
+  .feedback-explain strong { color: var(--text); }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .next-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    display: none;
+  }
+  .next-btn.show {
+    display: block;
+    animation: slideUp .3s ease;
+  }
+  .next-btn:hover { background: #252938; border-color: rgba(255,255,255,.15); }
+
+  /* ── RESULTS ── */
+  .results-screen {
+    text-align: center; padding: 40px 0;
+  }
+  .results-trophy { font-size: 72px; margin-bottom: 16px; animation: bounce 1s ease; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-20px); }
+    60% { transform: translateY(-10px); }
+  }
+  .results-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 56px; letter-spacing: 2px; color: #fff;
+    margin-bottom: 8px;
+  }
+  .results-score-big {
+    font-family: 'DM Mono', monospace;
+    font-size: 48px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .results-pct { font-size: 16px; color: var(--muted); margin-bottom: 36px; }
+
+  .results-breakdown {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 32px;
+  }
+  .breakdown-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 12px;
+  }
+  .breakdown-icon { font-size: 24px; margin-bottom: 6px; }
+  .breakdown-num { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: #fff; }
+  .breakdown-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .results-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff; border: none;
+    border-radius: 12px;
+    padding: 14px 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 4px 16px rgba(59,130,246,.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-secondary {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-secondary:hover { background: #252938; }
+
+  /* Score color */
+  .score-a { color: var(--contact-color); }
+  .score-b { color: var(--airborne-color); }
+  .score-c { color: var(--wrong); }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex; gap: 8px; justify-content: center;
+    margin-bottom: 28px;
+  }
+  .mode-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 13px; font-weight: 600;
+    color: var(--muted);
+    cursor: pointer; transition: all .2s;
+  }
+  .mode-btn.active {
+    background: rgba(59,130,246,.15);
+    border-color: rgba(59,130,246,.4);
+    color: #93c5fd;
+  }
+
+  /* Hint strip */
+  .hint-strip {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .ref-grid { grid-template-columns: 1fr; }
+    .card-row { grid-template-columns: 1fr; }
+    .results-breakdown { grid-template-columns: repeat(3,1fr); }
+    .intro-title { font-size: 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ══════════════════════ HEADER ══════════════════════ -->
+  <header class="site-header">
+    <div class="logo">
+      <div class="logo-badge">🚪</div>
+      <div>
+        <div class="logo-text">What's Your Sign?</div>
+        <div class="logo-sub">Isolation Precautions Game</div>
+      </div>
+    </div>
+    <div class="score-pill" id="liveScore" style="display:none">
+      <div>
+        <div class="score-label">Score</div>
+        <div class="score-num" id="liveScoreNum">0</div>
+      </div>
+      <div style="width:1px;height:28px;background:var(--border)"></div>
+      <div>
+        <div class="score-label">Question</div>
+        <div class="score-num" id="liveQNum">1 / 15</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════ INTRO ══════════════════════ -->
+  <div class="screen active" id="introScreen">
+    <div class="intro-hero">
+      <div class="intro-tag">Infection Control · Patient Safety</div>
+      <div class="intro-title">
+        WHAT'S<br>YOUR <span class="c">SIGN</span><span class="d">?</span>
+      </div>
+      <div class="intro-sub">A patient is in the room. You're standing at the door. Which precaution sign goes up? Contact, Droplet, or Airborne — pick the right one to protect your team.</div>
+    </div>
+
+    <!-- Reference cards -->
+    <div class="ref-grid">
+      <div class="ref-card contact">
+        <div class="ref-icon">🧤</div>
+        <div class="ref-name">Contact</div>
+        <div class="ref-ppe">PPE: Gown + Gloves</div>
+        <div class="ref-examples"><strong>Diseases:</strong> MRSA, C. diff, VRE, scabies, impetigo, wound infections<br><br><strong>Key rule:</strong> Spread by touch — skin-to-skin or contaminated surfaces</div>
+      </div>
+      <div class="ref-card droplet">
+        <div class="ref-icon">💧</div>
+        <div class="ref-name">Droplet</div>
+        <div class="ref-ppe">PPE: Surgical Mask within 3 ft</div>
+        <div class="ref-examples"><strong>Diseases:</strong> Influenza, strep, whooping cough, mumps, meningitis (bacterial), COVID<br><br><strong>Key rule:</strong> Large droplets, short range — mask stops transmission</div>
+      </div>
+      <div class="ref-card airborne">
+        <div class="ref-icon">🌬️</div>
+        <div class="ref-name">Airborne</div>
+        <div class="ref-ppe">PPE: N95 + Negative pressure room</div>
+        <div class="ref-examples"><strong>Diseases:</strong> TB, measles (rubeola), varicella (chickenpox), smallpox<br><br><strong>Mnemonic:</strong> <strong>MTV</strong> — Measles, TB, Varicella</div>
+      </div>
+    </div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('study')" id="modeStudy">📚 Study Mode (reference visible)</button>
+      <button class="mode-btn" onclick="setMode('test')" id="modeTest">🎯 Test Mode (no hints)</button>
+    </div>
+
+    <div style="text-align:center">
+      <button class="start-btn" onclick="startGame()">SHOW ME THE SIGNS →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ GAME ══════════════════════ -->
+  <div class="screen" id="gameScreen">
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+
+    <div class="q-header">
+      <div class="q-num" id="qNum">PATIENT 1 OF 15</div>
+      <div class="streak-badge" id="streakBadge">🔥 3 in a row!</div>
+    </div>
+
+    <!-- Patient Room -->
+    <div class="patient-room" id="patientRoom">
+      <div class="room-label">🚪 Patient Room — What sign goes on this door?</div>
+      <div class="patient-name" id="patientName"></div>
+      <div class="patient-scenario" id="patientScenario"></div>
+      <div class="patient-details" id="patientDetails"></div>
+      <div class="vital-note" id="vitalNote"></div>
+    </div>
+
+    <div class="hint-strip" id="hintStrip">
+      🚪 <span>Read the patient's chart — then pick the sign that goes on their door.</span>
+    </div>
+
+    <div class="pick-label">WHAT'S THE SIGN FOR THIS DOOR?</div>
+
+    <!-- Answer Cards -->
+    <div class="card-row">
+      <div class="answer-card contact" id="cardContact" onclick="selectCard('contact')">
+        <div class="card-check">✅</div>
+        <div class="card-icon">🧤</div>
+        <div class="card-title">Contact</div>
+        <div class="card-ppe">Gown + Gloves</div>
+      </div>
+      <div class="answer-card droplet" id="cardDroplet" onclick="selectCard('droplet')">
+        <div class="card-check">✅</div>
+        <div class="card-icon">💧</div>
+        <div class="card-title">Droplet</div>
+        <div class="card-ppe">Surgical Mask<br>within 3 ft</div>
+      </div>
+      <div class="answer-card airborne" id="cardAirborne" onclick="selectCard('airborne')">
+        <div class="card-check">✅</div>
+        <div class="card-icon">🌬️</div>
+        <div class="card-title">Airborne</div>
+        <div class="card-ppe">N95 + Neg.<br>Pressure Room</div>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback-banner" id="feedbackBanner">
+      <div class="feedback-top">
+        <div class="feedback-icon" id="feedbackIcon"></div>
+        <div class="feedback-verdict" id="feedbackVerdict"></div>
+      </div>
+      <div class="feedback-explain" id="feedbackExplain"></div>
+    </div>
+
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Patient →</button>
+  </div>
+
+  <!-- ══════════════════════ RESULTS ══════════════════════ -->
+  <div class="screen" id="resultsScreen">
+    <div class="results-screen">
+      <div class="results-trophy" id="resultsTrophy">🏆</div>
+      <div class="results-title">SIGNS CHECKED</div>
+      <div class="results-score-big" id="resultsBig"></div>
+      <div class="results-pct" id="resultsPct"></div>
+
+      <div class="results-breakdown">
+        <div class="breakdown-card">
+          <div class="breakdown-icon">✅</div>
+          <div class="breakdown-num" id="bCorrect" style="color:var(--correct)">0</div>
+          <div class="breakdown-label">Correct</div>
+        </div>
+        <div class="breakdown-card">
+          <div class="breakdown-icon">❌</div>
+          <div class="breakdown-num" id="bWrong" style="color:var(--wrong)">0</div>
+          <div class="breakdown-label">Missed</div>
+        </div>
+        <div class="breakdown-card">
+          <div class="breakdown-icon">🔥</div>
+          <div class="breakdown-num" id="bStreak" style="color:var(--airborne-color)">0</div>
+          <div class="breakdown-label">Best Streak</div>
+        </div>
+      </div>
+
+      <div id="missedSection" style="margin-bottom:28px;text-align:left"></div>
+
+      <div class="results-btns">
+        <button class="btn-primary" onclick="restartGame()">🔄 New Round</button>
+        <button class="btn-secondary" onclick="showIntro()">📋 Review Reference Cards</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA — Patient Scenarios
+// ══════════════════════════════════════════════
+const scenarios = [
+  {
+    name: "Mr. T. Nguyen, 68 y/o male",
+    scenario: "Patient admitted with a persistent productive cough lasting 3 weeks, night sweats, and unintentional 15 lb weight loss over 2 months. Chest X-ray shows upper lobe cavitation.",
+    details: ["Weight loss", "Night sweats", "Chronic cough", "X-ray: cavitation"],
+    note: "CXR findings + duration of symptoms are red flags. This pathogen travels in tiny airborne particles called droplet nuclei.",
+    answer: "airborne",
+    explain: "<strong>Airborne (TB)</strong> — Tuberculosis spreads via airborne droplet nuclei that can travel &gt;3 feet and linger in the air. Night sweats + upper lobe cavitation + weight loss = classic TB presentation. Requires N95 respirator and negative pressure room."
+  },
+  {
+    name: "Ms. R. Okonkwo, 45 y/o female",
+    scenario: "Post-op hip replacement patient developed a wound infection. Culture results show methicillin-resistant bacteria. Wound has purulent drainage and surrounding cellulitis.",
+    details: ["Post-op", "Wound infection", "MRSA confirmed", "Purulent drainage"],
+    note: "This organism colonizes skin and is spread through direct or indirect contact with infected wounds or contaminated surfaces.",
+    answer: "contact",
+    explain: "<strong>Contact Precautions (MRSA)</strong> — MRSA spreads via direct skin contact and contaminated surfaces/equipment. Healthcare workers must wear gown and gloves upon entry. Standard mask is NOT required unless droplet-generating procedures are planned."
+  },
+  {
+    name: "Jaylen M., 9 y/o male",
+    scenario: "Child presents with characteristic skin vesicles (blisters) progressing in crops from the trunk outward. Patient is febrile and very itchy. States no prior vaccination.",
+    details: ["Vesicular rash", "Trunk to extremities", "Unvaccinated", "Pruritic"],
+    note: "This disease can spread by BOTH direct contact with vesicles AND airborne particles from respiratory secretions. Use the more protective precaution.",
+    answer: "airborne",
+    explain: "<strong>Airborne + Contact Precautions (Varicella/Chickenpox)</strong> — Varicella (MTV = Measles, TB, Varicella) requires Airborne precautions because it can spread via airborne droplet nuclei. It also requires Contact for vesicle drainage. When dual precautions apply, Airborne is the higher-level protocol."
+  },
+  {
+    name: "Mrs. B. Hernandez, 72 y/o female",
+    scenario: "Nursing home resident transferred with 4 days of watery diarrhea following recent antibiotic use. Stool is loose and frequent — up to 8 times/day.",
+    details: ["Recent antibiotics", "Watery diarrhea", "Nursing home transfer", "8 BM/day"],
+    note: "Alcohol-based hand sanitizer does NOT kill the spores of this organism. Soap and water handwashing is critical.",
+    answer: "contact",
+    explain: "<strong>Contact Precautions (C. difficile)</strong> — C. diff spreads through the fecal-oral route via spore-contaminated hands and surfaces. Important: alcohol hand rub does NOT kill C. diff spores — wash hands with soap and water. Gown and gloves are required for all room entries."
+  },
+  {
+    name: "Derek P., 32 y/o male",
+    scenario: "Patient presents to clinic with sudden onset fever 102°F, body aches, headache, and non-productive cough for 24 hours. Reports several coworkers had similar symptoms this week.",
+    details: ["Fever 102°F", "Myalgia", "Cough", "Community outbreak"],
+    note: "This respiratory virus spreads through large respiratory droplets produced during coughing and sneezing — effective range is about 3 feet.",
+    answer: "droplet",
+    explain: "<strong>Droplet Precautions (Influenza)</strong> — Influenza spreads through large respiratory droplets (not tiny airborne particles) within ~3 feet. Surgical mask is required for HCW within 3 feet of patient. A regular surgical mask is sufficient — N95 is not routinely required for flu."
+  },
+  {
+    name: "Amara D., 6 y/o female",
+    scenario: "Child brought in by parent with high fever, parotid gland swelling (chipmunk cheeks), and ear pain. The parent reports the child was unvaccinated due to religious exemption.",
+    details: ["Parotid swelling", "Unvaccinated", "Fever", "Otalgia"],
+    note: "Swelling of the parotid gland is pathognomonic for this childhood illness that spreads through respiratory secretions.",
+    answer: "droplet",
+    explain: "<strong>Droplet Precautions (Mumps)</strong> — Mumps (paramyxovirus) spreads through large respiratory droplets and direct contact with infected saliva. Parotid swelling is the hallmark sign. Surgical mask required. Note: MMR vaccine prevents this."
+  },
+  {
+    name: "Mr. C. Washington, 55 y/o male",
+    scenario: "HIV-positive patient admitted with 2-week history of cough, low-grade fever, and shortness of breath. Chest X-ray shows diffuse bilateral infiltrates. CD4 count is 95 cells/μL.",
+    details: ["HIV+", "CD4 = 95", "Bilateral infiltrates", "Progressive SOB"],
+    note: "At this CD4 level, opportunistic infections are common. This particular pneumonia (PCP) spreads via airborne droplet nuclei.",
+    answer: "airborne",
+    explain: "<strong>Airborne Precautions (PCP / Pneumocystis)</strong> — PCP (Pneumocystis jirovecii pneumonia) occurs in severely immunocompromised patients (CD4 &lt;200) and spreads via airborne transmission. N95 + negative pressure room required. This patient is also at risk for TB — work-up should include AFB smear."
+  },
+  {
+    name: "Nurse alert: Room 4 — Lisa K., 28 y/o",
+    scenario: "Post-partum patient diagnosed with Group A Strep (GAS) wound infection at cesarean incision site. Wound is draining serous-purulent fluid and patient has fever 101.2°F.",
+    details: ["Post C-section", "GAS wound infection", "Draining wound", "Febrile"],
+    note: "Group A Streptococcus can spread both by direct wound contact and potentially via respiratory droplets, but the primary concern here is the infected wound.",
+    answer: "contact",
+    explain: "<strong>Contact Precautions (Group A Strep wound infection)</strong> — The primary route here is wound contact. Gown and gloves must be worn before entering. Note: GAS pharyngitis would require Droplet. For wound infections, Contact is the standard precaution."
+  },
+  {
+    name: "Marcus L., 14 y/o male",
+    scenario: "Adolescent presents with high fever, stiff neck, and sensitivity to light. Petechial rash noted on trunk and extremities. He is confused and asks 'Where am I?'",
+    details: ["Nuchal rigidity", "Petechiae", "Photophobia", "Altered mental status"],
+    note: "This is a medical emergency. The bacteria causing this illness spreads through respiratory secretions and close contact. Begin treatment AND isolation simultaneously.",
+    answer: "droplet",
+    explain: "<strong>Droplet Precautions (Bacterial Meningitis – N. meningitidis)</strong> — Neisseria meningitidis spreads via respiratory droplets. The triad of fever + nuchal rigidity + altered LOC = meningitis until proven otherwise. Petechiae indicate possible meningococcemia — this is LIFE-THREATENING. Droplet precautions + immediate IV antibiotics + LP if no contraindications."
+  },
+  {
+    name: "Elderly resident from Springfield Nursing Home",
+    scenario: "Nursing home transfer — staff report this resident has intensely itchy skin, worse at night, with linear burrow tracks visible in the finger webs and wrist folds.",
+    details: ["Nursing home transfer", "Pruritus", "Linear burrows", "Web spaces affected"],
+    note: "This infestation is caused by a mite that burrows under the skin. It is spread by prolonged skin-to-skin contact or contact with infested bedding.",
+    answer: "contact",
+    explain: "<strong>Contact Precautions (Scabies)</strong> — Scabies (Sarcoptes scabiei) spreads via prolonged direct skin contact or contact with infested items. Gown and gloves are required. The classic presentation is nocturnal pruritus with linear burrow tracks in web spaces and wrist folds."
+  },
+  {
+    name: "Mrs. Y. Kim, 62 y/o female",
+    scenario: "Patient admitted for elective knee replacement is noted on admission screening to have MRSA colonization in her nares (nasal swab positive). She is asymptomatic with no wounds.",
+    details: ["Pre-op admission", "MRSA colonization", "Nasal swab +", "No active wound"],
+    note: "Even asymptomatic MRSA colonization requires precautions because the patient can shed the organism and potentially transmit it to others.",
+    answer: "contact",
+    explain: "<strong>Contact Precautions (MRSA colonization)</strong> — Even asymptomatic colonization requires Contact precautions in most healthcare facilities. MRSA is shed from nasal passages and skin. Gown and gloves required for room entry. This protects other patients and staff from transmission."
+  },
+  {
+    name: "Tommy R., 4 y/o male",
+    scenario: "Child brought in by parents with a blotchy red rash that started on the face and spread downward to the trunk and extremities over 3 days. High fever 104°F, red eyes (conjunctivitis), and runny nose preceded the rash.",
+    details: ["Maculopapular rash", "Cephalocaudal spread", "Fever 104°F", "Koplik spots noted"],
+    note: "Koplik spots (white spots on buccal mucosa) are pathognomonic. This virus is one of the most contagious known — it can linger in the air for up to 2 hours after the infected person leaves a room.",
+    answer: "airborne",
+    explain: "<strong>Airborne Precautions (Measles/Rubeola)</strong> — Measles is in the MTV mnemonic (Measles, TB, Varicella). It's one of the most contagious pathogens and spreads via airborne droplet nuclei. It can remain infectious in the air for up to 2 hours. Koplik spots + cephalocaudal rash = classic measles. N95 + negative pressure room required."
+  },
+  {
+    name: "Mr. A. Patel, 50 y/o male",
+    scenario: "Patient with recurrent UTIs is admitted with E. coli bacteremia. He has an indwelling Foley catheter with cloudy, foul-smelling urine. Blood cultures are positive.",
+    details: ["Foley catheter", "E. coli bacteremia", "Cloudy urine", "+ blood cultures"],
+    note: "E. coli is a normal gut flora that becomes pathogenic in other body sites. The bacteria is spread by contact with contaminated body fluids or surfaces.",
+    answer: "contact",
+    explain: "<strong>Contact Precautions (Multi-drug resistant E. coli)</strong> — Drug-resistant gram-negative organisms like ESBL-producing E. coli require Contact precautions. Spread via direct contact with bodily fluids or contaminated equipment (catheters, hands). Standard/Contact precautions apply — respiratory precautions are not indicated."
+  },
+  {
+    name: "Ms. F. Osei, 23 y/o female",
+    scenario: "College student presents with severe sore throat, exudates on tonsils, fever 103°F, and swollen anterior cervical lymph nodes. Rapid strep test is positive.",
+    details: ["Exudative pharyngitis", "Fever 103°F", "Rapid strep +", "Lymphadenopathy"],
+    note: "This bacteria spreads through respiratory droplets produced when the infected person coughs, sneezes, or talks. Close contact within 3 feet is the main risk.",
+    answer: "droplet",
+    explain: "<strong>Droplet Precautions (Streptococcal Pharyngitis)</strong> — Group A Strep (strep throat) spreads via respiratory droplets. Surgical mask is required within 3 feet. Note: the patient should also wear a mask to contain their droplets. Precautions can typically be discontinued 24 hours after starting appropriate antibiotics."
+  },
+  {
+    name: "Emergency Dept. — Unidentified patient",
+    scenario: "EMS brings in a homeless adult with unknown history. Patient has a chronic cough, is febrile with night sweats, and has visible purulent sputum. He is confused and cannot provide history.",
+    details: ["Unknown history", "Homeless", "Chronic cough", "Purulent sputum", "Night sweats"],
+    note: "When TB status is unknown and clinical signs are highly suspicious, what do you do FIRST before definitive diagnosis?",
+    answer: "airborne",
+    explain: "<strong>Airborne Precautions (Presumptive TB — Rule Out)</strong> — When TB cannot be ruled out based on clinical presentation (chronic cough + fever + night sweats + risk factors), Airborne precautions must be initiated IMMEDIATELY — don't wait for culture results. N95 + negative pressure room. A CXR and sputum AFB smear x3 should be ordered. Better safe than sorry!"
+  }
+];
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let currentQ = 0;
+let score = 0;
+let streak = 0;
+let bestStreak = 0;
+let wrong = 0;
+let answered = false;
+let gameMode = 'study';
+let shuffledScenarios = [];
+let missedList = [];
+
+function setMode(m) {
+  gameMode = m;
+  document.getElementById('modeStudy').classList.toggle('active', m === 'study');
+  document.getElementById('modeTest').classList.toggle('active', m === 'test');
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startGame() {
+  shuffledScenarios = shuffle([...scenarios]);
+  currentQ = 0; score = 0; streak = 0; bestStreak = 0; wrong = 0;
+  missedList = [];
+  showScreen('gameScreen');
+  document.getElementById('liveScore').style.display = 'flex';
+  loadQuestion();
+}
+
+function loadQuestion() {
+  answered = false;
+  const s = shuffledScenarios[currentQ];
+
+  // Reset cards
+  ['cardContact','cardDroplet','cardAirborne'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = el.className.split(' ').filter(c =>
+      !['selected','result-correct','result-wrong','reveal-correct'].includes(c)
+    ).join(' ');
+    el.style.pointerEvents = 'auto';
+  });
+
+  // Hide feedback & next
+  const fb = document.getElementById('feedbackBanner');
+  fb.className = 'feedback-banner';
+  document.getElementById('nextBtn').className = 'next-btn';
+
+  // Populate
+  document.getElementById('patientName').textContent = s.name;
+  document.getElementById('patientScenario').textContent = s.scenario;
+
+  const details = document.getElementById('patientDetails');
+  details.innerHTML = s.details.map(d => `<div class="detail-chip">${d}</div>`).join('');
+
+  const noteEl = document.getElementById('vitalNote');
+  if (gameMode === 'study') {
+    noteEl.textContent = '💭 Hint: ' + s.note;
+    noteEl.style.display = 'block';
+    document.getElementById('hintStrip').style.display = 'flex';
+  } else {
+    noteEl.style.display = 'none';
+    document.getElementById('hintStrip').style.display = 'none';
+  }
+
+  // Progress
+  const total = shuffledScenarios.length;
+  document.getElementById('qNum').textContent = `PATIENT ${currentQ + 1} OF ${total}`;
+  document.getElementById('liveQNum').textContent = `${currentQ + 1} / ${total}`;
+  document.getElementById('liveScoreNum').textContent = score;
+  document.getElementById('progressBar').style.width = `${(currentQ / total) * 100}%`;
+
+  // Streak badge
+  const sb = document.getElementById('streakBadge');
+  if (streak >= 3) {
+    sb.textContent = `🔥 ${streak} in a row!`;
+    sb.classList.add('show');
+  } else {
+    sb.classList.remove('show');
+  }
+}
+
+function selectCard(type) {
+  if (answered) return;
+  answered = true;
+
+  const s = shuffledScenarios[currentQ];
+  const correct = type === s.answer;
+
+  // Disable all cards
+  ['cardContact','cardDroplet','cardAirborne'].forEach(id => {
+    document.getElementById(id).style.pointerEvents = 'none';
+  });
+
+  const idMap = { contact: 'cardContact', droplet: 'cardDroplet', airborne: 'cardAirborne' };
+  const selectedCard = document.getElementById(idMap[type]);
+
+  if (correct) {
+    score++;
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+    selectedCard.classList.add('result-correct');
+    showFeedback(true, s.explain);
+  } else {
+    streak = 0;
+    wrong++;
+    missedList.push({ ...s });
+    selectedCard.classList.add('result-wrong');
+    // Reveal correct
+    const correctCard = document.getElementById(idMap[s.answer]);
+    correctCard.classList.add('result-correct', 'reveal-correct');
+    showFeedback(false, s.explain);
+  }
+
+  document.getElementById('liveScoreNum').textContent = score;
+  document.getElementById('nextBtn').className = 'next-btn show';
+}
+
+function showFeedback(correct, explain) {
+  const fb = document.getElementById('feedbackBanner');
+  fb.className = `feedback-banner ${correct ? 'correct' : 'wrong'} show`;
+  document.getElementById('feedbackIcon').textContent = correct ? '✅' : '❌';
+  document.getElementById('feedbackVerdict').textContent = correct ? 'Correct! Great call.' : 'Not quite — review below.';
+  document.getElementById('feedbackExplain').innerHTML = explain;
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= shuffledScenarios.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('liveScore').style.display = 'none';
+  const total = shuffledScenarios.length;
+  const pct = Math.round((score / total) * 100);
+
+  document.getElementById('resultsBig').textContent = `${score} / ${total}`;
+  document.getElementById('resultsBig').className = `results-score-big ${pct >= 80 ? 'score-a' : pct >= 60 ? 'score-b' : 'score-c'}`;
+  document.getElementById('resultsPct').textContent = `${pct}% — ${pct >= 90 ? 'Excellent! Patient safety expert 🎉' : pct >= 70 ? 'Good work! Review the ones you missed.' : 'Keep studying — infection control saves lives!'}`;
+  document.getElementById('resultsTrophy').textContent = pct >= 90 ? '🏆' : pct >= 70 ? '🥈' : '📚';
+  document.getElementById('bCorrect').textContent = score;
+  document.getElementById('bWrong').textContent = wrong;
+  document.getElementById('bStreak').textContent = bestStreak;
+
+  // Missed section
+  const ms = document.getElementById('missedSection');
+  if (missedList.length > 0) {
+    ms.innerHTML = `
+      <div style="font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Review — Missed Questions</div>
+      ${missedList.map(s => `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${s.name}</div>
+          <div style="font-size:13px;color:var(--text);margin-bottom:8px;">${s.scenario.substring(0,120)}...</div>
+          <div style="font-size:12px;padding:8px 12px;border-radius:8px;background:${s.answer==='contact'?'var(--contact-bg)':s.answer==='droplet'?'var(--droplet-bg)':'var(--airborne-bg)'};border:1px solid ${s.answer==='contact'?'rgba(34,197,94,.2)':s.answer==='droplet'?'rgba(59,130,246,.2)':'rgba(245,158,11,.2)'};">${s.explain}</div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    ms.innerHTML = `<div style="text-align:center;padding:20px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:12px;color:var(--contact-color);font-weight:700;">🎉 Perfect score! You got every single one right!</div>`;
+  }
+
+  showScreen('resultsScreen');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function restartGame() { startGame(); }
+function showIntro() {
+  document.getElementById('liveScore').style.display = 'none';
+  showScreen('introScreen');
+}
+</script>
+</body>
+</html>
